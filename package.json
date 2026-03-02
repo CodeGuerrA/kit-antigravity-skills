@@ -1,0 +1,29 @@
+{
+  "name": "antigravity-kit",
+  "version": "1.0.0",
+  "description": "Framework de templates de IA para agentes de engenharia autônomos e especializados.",
+  "main": "index.js",
+  "bin": {
+    "antigravity-kit": "bin/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "gemini",
+    "cursor",
+    "windsurf",
+    "templates",
+    "quality-gate",
+    "clean-code"
+  ],
+  "author": "Carlos Garcia",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^14.0.0",
+    "fs-extra": "^10.0.0"
+  }
+}
