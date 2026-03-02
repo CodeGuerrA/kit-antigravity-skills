@@ -10,16 +10,24 @@ Este documento define as regras de **Arquitetura Hexagonal** obrigatórias no pr
 ## 📁 ESTRUTURA DE CAMADAS
 
 ### 1. DOMAIN (`.domain`) — O Coração
-- Contém: `entity/`, `port/` (interfaces), `dto/` (record), `exception/`, `enums/`.
+- Contém: `entity/`, `port/` (interfaces), `dto/` (record), `enums/`.
 - **REGRA ABSOLUTA**: Não deve importar nada de fora (Jakarta, Spring, JPA, Keycloak).
 - Ports: parâmetros e retornos DEVEM ser tipos do domínio.
-- Tipos PROIBIDOS em Ports: `ResponseEntity`, `HttpStatus`, `UserRepresentation`, `AccessTokenResponse`, `Page` (Spring Data), entidades JPA.
+- Tipos PROIBIDOS em Ports: `ResponseEntity`, `HttpStatus`, `UserRepresentation`, `AccessTokenResponse`, entidades JPA.
+- Exceptions: Exceções de negócio (extensões de `BusinessException`) vivem na camada de **Application**, não no domínio.
+
+### 1.1 Decisões Pragmáticas (Trade-offs)
+Embora a pureza seja o objetivo, algumas concessões são feitas para manter a produtividade:
+- **Pagination**: O uso de `org.springframework.data.domain.Page` é PERMITIDO em Ports de leitura para evitar a reimplementação complexa de wrappers de paginação.
+- **Enums**: Enums de domínio podem ser usados em todas as camadas.
+- **Records**: Records de domínio podem ser usados como retorno em Ports.
 
 ### 2. APPLICATION (`.application`) — A Orquestração
-- Contém: `facade/`, `service/`, `validator/`.
+- Contém: `facade/`, `service/`, `validator/`, `exception/`.
 - **REGRA**: Depende apenas do Domínio (Ports e DTOs). Nunca de implementações concretas de infra.
 - Imports PROIBIDOS: `*Adapter`, `*Impl`, `jakarta.persistence.*`, `org.keycloak.*`.
-- NÃO contém regras de negócio — apenas orquestra fluxo entre Ports.
+- **Exceptions de Negócio**: Vivem aqui em `exception/`.
+- NÃO contém regras de negócio complexas — apenas orquestra fluxo entre Ports e Entities.
 
 ### 3. INFRASTRUCTURE (`.infrastructure`) — A Ponte
 - Contém: `adapter/`, `repository/`, `external/` (Keycloak, APIs), `exception/`.

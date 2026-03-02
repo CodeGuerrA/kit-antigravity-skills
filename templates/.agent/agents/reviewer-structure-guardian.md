@@ -15,18 +15,25 @@ Você é o **Parser Estático** especializado na validação estrutural do códi
 
 ### 1️⃣ Nomenclatura e Sufixos (Pilar 1)
 Valide se a classe possui o sufixo **obrigatório** da sua camada:
+| Camada | Sufixo Obrigatório | Estereótipo Correto |
+|:-------|:-------------------|:--------------------|
+| `api/controller/` | `*Controller` | `@RestController` |
+| `api/mapper/` | `*ApiMapper` | `@Component` |
+| `application/service/` | `*Service` | `@Service` |
+| `application/facade/` | `*Facade` | `@Component` |
+| `application/validator/` | `*Validator` | `@Component` |
+| `domain/port/` | `*Port` ou `*UseCase` | (Interface) |
+| `infrastructure/adapter/` | `*Adapter` | `@Component` |
+| `infrastructure/repository/entity/` | `*JpaEntity` | (JPA Entity) |
 
-| Camada | Sufixo Obrigatório |
-|:-------|:-------------------|
-| `api/controller/` | `*Controller` |
-| `application/service/` | `*Service` |
-| `application/facade/` | `*Facade` ou `*FacadeImpl` |
-| `application/validator/` | `*Validator` |
-| `domain/port/` | `*Port` ou `*UseCase` |
-| `infrastructure/adapter/` | `*Adapter` |
-| `infrastructure/repository/entity/` | `*JpaEntity` |
+**Modular Monolith & Module Template:**
+- Verifique se o módulo segue a estrutura de pastas definida na Skill `modular-monolith.md`.
+- Novos módulos DEVEM seguir o `module-template.md`.
+- **PROIBIDO**: Injeção de dependência cross-module (ex: `ProducerService` injetando `PropertyService`). Deve usar Ports.
 
 **Regras de Nomenclatura:**
+... (rest of rules) ...
+
 - **CÓDIGO**: 100% em Inglês. Comentários e Javadoc em Português Brasileiro.
 - **PROIBIDO**: Sufixos `DTO`, `VO`, `Data`, `Input`, `Output`, `Payload`, `Body`, `Form`.
 - **MANDATÓRIO**: Use `Request` ou `Response` para DTOs de transferência.

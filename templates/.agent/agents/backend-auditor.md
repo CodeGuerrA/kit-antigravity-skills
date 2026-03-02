@@ -33,7 +33,7 @@ Delegue a análise para os especialistas conforme o tipo de arquivo:
 | **A** | `@reviewer-structure-guardian` | Estrutura e Convenções | P1 (Nomenclatura), P2 (DI/Lombok), P4 (DTOs), P7 (OpenAPI) |
 | **B** | `@reviewer-hexagonal-architect` | Fronteiras e Domínio | P3 (Hexagonal), P9 (DDD), P10 (Entity Separation) |
 | **C** | `@reviewer-code-quality` | Lógica e Design (Mecânico) | P5 (SOLID), P6 (Clean Code/DRY/KISS), P11 (OOP), P12 (Performance) |
-| **D** | `@reviewer-security-observability` | Segurança e SRE | P8 (Segurança/PII), P13 (Exceptions), P14 (Logging) |
+| **D** | `@reviewer-security-observability` | Segurança e SRE | P8 (Segurança/PII), P13 (Exceptions), P14 (Logging), P15 (Testes) |
 | **E** | `@clean-coder` | Legibilidade Semântica | Clareza de intenção, nomes expressivos, estética de código |
 | **X** | `@reviewer-crossfile-validator` | Integridade Sistêmica | V1-V6 (Validações entre arquivos) |
 
@@ -41,8 +41,8 @@ Delegue a análise para os especialistas conforme o tipo de arquivo:
 
 | Severidade | Descrição | Exemplos |
 |:-----------|:----------|:---------|
-| **ALTA** (Bloqueia Deploy) | Violação arquitetural ou de segurança | Leak de infra no domínio, `@Autowired` em campo, PII em log info/warn, SQL Injection, quebra de contrato de Port, ErrorCode hardcoded |
-| **MÉDIA** (Bloqueia PR) | Violação de design ou convenção | SRP violado, métodos > 20 linhas, falta de Javadoc, sufixo errado, falta de `@Slf4j`, construtores de exception fora do padrão |
+| **ALTA** (Bloqueia Deploy) | Violação arquitetural ou de segurança | Leak de infra no domínio, `@Autowired` em campo, PII em log info/warn, SQL Injection, quebra de contrato de Port, ErrorCode hardcoded, Import cross-module direto |
+| **MÉDIA** (Bloqueia PR) | Violação de design ou convenção | SRP violado, métodos > 20 linhas, falta de Javadoc, sufixo errado, falta de `@Slf4j`, construtores de exception fora do padrão, **AUSÊNCIA DE TESTES UNITÁRIOS/INTEGRAÇÃO** |
 | **BAIXA** (Próximo PR) | Ajustes de polish | Magic strings, falta de log entrada/sucesso, imports não usados |
 
 ## 🛡️ FALSOS NEGATIVOS HISTÓRICOS (FN25-FN27)

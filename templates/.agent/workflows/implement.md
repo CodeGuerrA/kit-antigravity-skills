@@ -1,10 +1,10 @@
 ---
-description: "Implementa uma nova funcionalidade seguindo SOLID, Arquitetura Hexagonal e Clean Code."
+description: "Implementa uma nova funcionalidade ou módulo completo seguindo SOLID, Hexagonal e Clean Code."
 ---
 
-# 🛠️ WORKFLOW: Implementar Funcionalidade (/implement)
+# 🛠️ WORKFLOW: Implementar Funcionalidade ou Módulo (/implement)
 
-**Descrição**: Implementa uma nova funcionalidade, classe, endpoint ou módulo seguindo rigorosamente os padrões de SOLID, Arquitetura Hexagonal e Clean Code.
+**Descrição**: Implementa uma nova funcionalidade, classe, endpoint ou um **Módulo Completo** (Bounded Context) seguindo rigorosamente os padrões de SOLID, Arquitetura Hexagonal e Clean Code.
 
 ---
 
@@ -17,11 +17,13 @@ description: "Implementa uma nova funcionalidade seguindo SOLID, Arquitetura Hex
 
 ### FASE 1 — Raciocínio de Arquitetura
 O planejamento via `sequential-thinking` deve cobrir obrigatoriamente:
-1. **Mapeamento de Artefatos**: O que precisa ser criado (camadas, classes, interfaces).
-2. **Localização na Arquitetura**: Onde cada artefato vai viver na estrutura hexagonal.
-3. **Impacto**: Quais arquivos existentes serão modificados.
-4. **Dependências**: Injeções de dependência necessárias (usando SEMPRE constructor injection).
-5. **Mitigação de Riscos**: Possíveis problemas e como evitá-los.
+1. **Escopo**: É uma funcionalidade em módulo existente ou um **Novo Módulo**?
+   - Se for **Novo Módulo**, utilize a estratégia **Bottom-Up** (Domain → Infrastructure → Application → API) detalhada na Skill `module-template.md`.
+2. **Mapeamento de Artefatos**: O que precisa ser criado (camadas, classes, interfaces).
+3. **Localização na Arquitetura**: Onde cada artefato vai viver na estrutura hexagonal.
+4. **Impacto**: Quais arquivos existentes serão modificados.
+5. **Dependências**: Injeções de dependência necessárias (usando SEMPRE constructor injection).
+6. **Mitigação de Riscos**: Possíveis problemas e como evitá-los.
 
 > ⚠️ Só avance para o código após o `sequential-thinking` concluir com um plano de ação claro.
 
@@ -50,9 +52,9 @@ Consulte a Skill `code-standards.md` para detalhes dos pilares S, O, L, I, D.
 
 ---
 
-### FASE 3 — Estrutura de Pacotes Obrigatória
+### FASE 3 — Estrutura de Pacotes e Scaffolding
 
-Respeite a hierarquia do projeto para cada módulo:
+Respeite a hierarquia do projeto. Se estiver criando um módulo novo, utilize a Skill `module-template.md` como checklist de arquivos obrigatórios.
 
 ```
 modules/<modulo>/
@@ -61,6 +63,7 @@ modules/<modulo>/
     dto/
       request/      → record com @Schema e validações (Jakarta).
       response/     → record com @Schema.
+    mapper/         → @Component, conversão Domain ↔ API.
   application/
     facade/         → @Component, orquestra múltiplos services.
     service/        → @Service, orquestra fluxo, converte DTOs.
@@ -92,9 +95,28 @@ Antes de declarar a implementação concluída, verifique:
 - [ ] Nenhuma classe de domínio importa Spring, JPA ou frameworks externos.
 - [ ] Toda injeção de dependência é via construtor (`@RequiredArgsConstructor`).
 - [ ] DTOs de API (`api/dto`) são separados dos DTOs de domínio (`domain/dto`).
+- [ ] Adapter usa `@Component` e implementa um Port do domínio.
 - [ ] Logs com `@Slf4j` presentes nos pontos de entrada e saída das operações.
 - [ ] Exceções específicas do negócio são lançadas (nunca `RuntimeException` genérica).
 - [ ] Código em Inglês, Javadoc/Comentários em Português.
 - [ ] ErrorCodes de novos exceptions estão nos enums E no `messages.properties`.
 - [ ] Novas exceptions mapeadas no `BusinessExceptionHttpStatusResolver`.
 - [ ] Controller tem `@Tag`, `@Operation`, `@ApiResponse` e DTOs com `@Schema`.
+- [ ] **Novo Módulo?** Registrar novas mensagens e configurar `SecurityConfig` para as novas rotas.
+
+---
+
+### FASE 5 — Testes Obrigatórios
+
+Antes de submeter ao Quality Gate:
+1. **Rode os testes existentes**: Antes de começar, garanta que o baseline está verde.
+2. **Service Tests**: 100% de cobertura de caminhos.
+3. **Controller Tests**: MockMvc validando status codes e contratos JSON.
+4. **Facade Tests**: Validar delegação para Services.
+5. **Adapter Tests**: @DataJpaTest para persistência.
+6. **Domain Entity Tests**: Validar lógica interna da entidade.
+7. **Mapper Tests**: Validar conversão entre camadas.
+8. **Fixture Factory**: Use o padrão Fixture para dados reutilizáveis.
+9. **Execução**: Rode `./mvnw test` e garanta 100% de sucesso.
+
+Consulte a Skill `testing-patterns.md` para exemplos completos de cada tipo de teste.

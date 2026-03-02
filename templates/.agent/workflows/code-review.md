@@ -28,7 +28,7 @@ Para cada arquivo, aplique TODOS os pilares correspondentes da Dispatch Table. C
 | **A** | `@reviewer-structure-guardian` | Nomenclatura, DI/Lombok, DTOs, OpenAPI |
 | **B** | `@reviewer-hexagonal-architect` | Hexagonal, DDD, Entity Separation |
 | **C** | `@reviewer-code-quality` | SOLID, Clean Code (mecânico), OOP, Performance |
-| **D** | `@reviewer-security-observability` | Segurança/PII, Exceptions, Logging |
+| **D** | `@reviewer-security-observability` | Segurança/PII, Exceptions, Logging, **Testes** |
 | **E** | `@clean-coder` | Legibilidade semântica, clareza de intenção |
 | **X** | `@reviewer-crossfile-validator` | V1-V6: Validações entre arquivos |
 
@@ -59,6 +59,12 @@ Emita o relatório no formato padronizado do `@backend-auditor`:
 
 - **APROVADO**: Código 100% conforme (zero violações ALTA e MÉDIA).
 - **REPROVADO**: Se houver >= 1 violação ALTA ou MÉDIA.
+- **Checklist de Testes (OBRIGATÓRIO)**: Auditor deve verificar existência de arquivos de teste para:
+  - Cada novo Service.
+  - Cada novo Controller endpoint.
+  - Cada novo PersistenceAdapter.
+  - Cada método de negócio novo em Domain Entities.
+  - Falta de testes = Violação MÉDIA automática.
 
 ### PASSO 5 — Pós-Review
 Pergunte: *"Foram encontradas [N] violações. Correção automática ou manual?"*

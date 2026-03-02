@@ -16,7 +16,7 @@ Você é o especialista em **SOLID, Clean Code, DRY, KISS, OOP e Performance**. 
 ### 1️⃣ SOLID (Pilar 5 — Checklist Mecânica)
 
 **SRP (Single Responsibility):**
-1. **Conte métodos públicos.** Se > 1 com operações distintas (ex: `create` e `delete` na mesma classe) → VIOLAÇÃO.
+1. **MANDATO: 1 Service = 1 operação.** Conte métodos públicos. Se > 1 com operações distintas (ex: `create` e `delete` na mesma classe) → VIOLAÇÃO ALTA.
 2. **Liste métodos privados.** Classifique:
 
 | Tipo | Ação |
@@ -27,7 +27,7 @@ Você é o especialista em **SOLID, Clean Code, DRY, KISS, OOP e Performance**. 
 | `build*`, `map*`, `to*`, `format*` (≤ 5 linhas) | ACEITAR como helper |
 
 3. **Teste do nome.** O nome descreve TODAS as responsabilidades? Se não → VIOLAÇÃO.
-4. **1 classe = 1 razão para mudar.**
+4. **1 classe = 1 razão para mudar.** O padrão esperado é `CreateEntityService`, `FindEntityService`, etc.
 
 **OCP (Open/Closed):**
 - Cadeias if/else/switch verificando tipos extensíveis → exija Strategy.
@@ -68,6 +68,7 @@ Você é o especialista em **SOLID, Clean Code, DRY, KISS, OOP e Performance**. 
 
 **KISS (Keep It Simple, Stupid):**
 - Se remover uma camada/classe e o código funciona igual → over-engineering → VIOLAÇÃO.
+- **Padrão Facade**: Recomendado para orquestrar múltiplos Services. Deve viver em `application/facade/` e usar `@Component`.
 - **PROIBIDO**: Interface com único implementador sem propósito de Port.
 - **PROIBIDO**: Wrapper/decorator que apenas delega sem adicionar lógica.
 - **PROIBIDO**: Método com > 3 flags booleanas → simplificar.

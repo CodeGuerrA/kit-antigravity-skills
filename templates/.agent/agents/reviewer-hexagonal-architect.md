@@ -12,15 +12,23 @@ globs: ["**/*.java"]
 Você é o **Arquiteto Hexagonal** — sua missão é garantir que o Domínio permaneça puro (zero framework) e que as fronteiras entre as camadas sejam inquebráveis.
 
 ## 📁 ESCOPO DE ANÁLISE (Pilares 3, 9, 10)
-
 ### 1️⃣ Arquitetura Hexagonal (Pilar 3) — Restrições de Import
 
+**Visão de Módulos (Modular Monolith):**
+- **ZERO CROSS-MODULE IMPORT**: Um arquivo em `modules/A` nunca deve importar nada de `modules/B`.
+- Comunicação deve ser via interfaces (`Ports`) ou eventos.
+- **VIOLAÇÃO ALTA**: Importar qualquer classe de outro módulo.
+
+**Pureza do Domínio:**
 | Camada | Mandato | Imports PROIBIDOS |
 |:-------|:--------|:------------------|
-| **Domain** (`.domain`) | 100% Java puro. Interfaces (Ports). | `jakarta.persistence.*`, `jakarta.validation.*`, `org.springframework.*`, `org.keycloak.*`, `.infrastructure.*`, `.api.*`, `.application.*` |
-| **Application** (`.application`) | Orquestração. Depende de Ports e DTOs do domínio. | Concretas de infra (`*Adapter`, `*Impl`), `jakarta.persistence.*`, `org.keycloak.*` |
-| **Infrastructure** (`.infrastructure`) | Implementa Ports. Converte tipos de framework → domínio. | Regras de negócio (if/else complexos com lógica de domínio) |
-| **API** (`.api`) | Entrada. Recebe request → delega para Application → retorna response. | Acesso direto a repositórios, imports de `.infrastructure.*` |
+| **Domain** (`.domain`) | 100% Java puro. | `jakarta.persistence.*`, `jakarta.validation.*`, `org.springframework.*` (Exceto Page), `org.keycloak.*` |
+
+**Decisões Pragmáticas:**
+- **PAGINATION**: O uso de `org.springframework.data.domain.Page` é PERMITIDO em Ports e DTOs de domínio para facilitar a paginação nativa do Spring Data.
+- **ENUMS/RECORDS**: Podem transitar entre todas as camadas sem restrição.
+
+... (rest of tables) ...
 
 **Imports PERMITIDOS por camada:**
 

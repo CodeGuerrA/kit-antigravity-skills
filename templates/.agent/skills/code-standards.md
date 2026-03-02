@@ -38,10 +38,15 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 | Anotação | Uso Correto |
 |:---------|:------------|
 | `@RestController` | Controllers |
-| `@Service` | Classes com lógica de negócio/orquestração |
-| `@Component` | Utilitários (Facades, Factories, Mappers, Validators, Converters) |
+| `@Service` | Classes com lógica de negócio/orquestração (Services) |
+| `@Component` | Utilitários (Adapters, Facades, Factories, Mappers, Validators, Converters) |
 | `@Repository` | Acesso a dados |
 | `@Configuration` | Classes com `@Bean` methods |
+
+**Exemplo Concreto:**
+- `UserJpaAdapter` -> `@Component` (é um Adapter de infra).
+- `UserFacade` -> `@Component` (é um orquestrador utilitário).
+- `UserService` -> `@Service` (contém lógica de domínio).
 
 **NÃO PODE:**
 - `@Service` em Facade/Factory/Mapper/Validator (use `@Component`).
@@ -90,10 +95,10 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 
 ## Pilar 5: SOLID
 
-- **SRP**: Máx. 1 método público por Service com operação distinta. Extração obrigatória de validações para `Validator`.
+- **SRP**: **1 Service = 1 operação = 1 método público `execute()`**. Padrão obrigatório: `CreateExampleService`, `FindExampleService`, `UpdateExampleService`, `DeleteExampleService`, `ListExampleService`. Extração obrigatória de validações para `Validator`.
 - **OCP**: Cadeias if/else por tipo extensível → Strategy. Conjunto fixo pequeno → ACEITAR.
 - **LSP**: Subclasses não podem restringir contrato do pai nem lançar `UnsupportedOperationException`.
-- **ISP**: Interfaces com métodos não usados por todos implementadores → dividir.
+- **ISP**: Interfaces com métodos não usados por todos implementadores → dividir. **Ports obrigatoriamente separados**: `SavePort`, `FindPort`, `ListPort`, `UpdatePort` — nunca um `RepositoryPort` genérico.
 - **DIP**: Domínio depende apenas de abstrações (Ports). `new` de classes de infra em Services → VIOLAÇÃO Alta.
 
 ---
@@ -129,8 +134,29 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 
 - PII (email, username, documento) **SOMENTE** em `log.debug()`. **NUNCA** em `info/warn/error`.
 - Tokens/senhas NUNCA em QUALQUER nível de log.
-- SQL: Sem concatenação de strings em queries (use `@Param`).
 - PROIBIDO: Expor entidades JPA como Response.
+
+### 🔐 SQL Safety (Anti SQL Injection)
+
+**REGRAS DE OURO — sem exceção:**
+
+| Técnica | Quando usar | Exemplo seguro |
+|:--------|:------------|:---------------|
+| Spring Data Derived Query | Queries simples por campo | `findByEmail(String email)` |
+| JPQL `@Query` + `@Param` | Queries complexas | `@Query("... WHERE u.id = :id") ... (@Param("id") Long id)` |
+| Native SQL `nativeQuery=true` + `@Param` | Quando JPQL é insuficiente | `@Query(value="SELECT * FROM t WHERE id=:id", nativeQuery=true)` |
+
+**PROIBIDO (VIOLAÇÃO ALTA):**
+- Concatenação de string em query: `"WHERE name = '" + name + "'"` → SQL Injection direto
+- Parâmetros posicionais `?1`, `?2` → use sempre `@Param("nomeExplicito")`
+- `@Query` sem `@Param` em qualquer parâmetro
+- Usar `EntityManager.createNativeQuery()` com string interpolada
+
+**Input Sanitization:**
+- Campos usados em `LIKE`: sanitize removendo `%`, `_`, `\` antes de usar como bind param.
+  Utilize `StringSanitizer` (já existe no `shared/util/`) antes de passar para o Repository.
+- Nunca confie em input do usuário — sempre valide via Bean Validation (`@NotBlank`, `@Pattern`, etc.)
+  na camada de API antes de chegar ao Domain/Infrastructure.
 
 ---
 
@@ -173,10 +199,23 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 
 ## Pilar 13: Exceptions Padronizadas
 
-- Toda exceção concreta estende `BusinessException` → subclasses de domínio.
-- ErrorCodes em Enums (`UserErrorCode`, `KeycloakErrorCode`, `EmailErrorCode`), NUNCA hardcoded.
+- Toda exceção concreta estende `BusinessException` → `ModuleException` abstrata (com campo contextual) → Concretas.
+- Exceções de negócio vivem em `application/exception/`. ErrorCodes vivem em `domain/enums/`.
+- ErrorCodes em Enums (`ProducerErrorCode`, `UserErrorCode`), NUNCA hardcoded. Use `.getMessageKey()`.
 - Cada ErrorCode DEVE ter entrada no `messages.properties` com `chave` + `chave.detail`.
-- Construtores seguem padrão por tipo (Keycloak: 3, Email: 3, User: variável).
+- Metadata contextual via `addMetadata()` no corpo do construtor, NÃO via `Map.of()` no `super()`.
+- **Template de Construtor:**
+```java
+public ProducerNotFoundException(Long producerId) {
+    super(
+        ProducerErrorCode.PRODUCER_NOT_FOUND.getMessageKey(),
+        "Producer not found",
+        HttpStatus.NOT_FOUND,
+        producerId  // campo contextual do ModuleException
+    );
+}
+```
+- **PersistenceException**: Exceções de infra devem preservar `cause` e usar construtor com `Throwable`.
 
 ---
 
@@ -185,6 +224,27 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 - `@Slf4j` obrigatório em Controllers, Facades, Services, Adapters e ExceptionHandlers.
 - `log.info` → operações de negócio. `log.debug` → consultas (ÚNICO para PII). `log.warn` → dados não encontrados. `log.error` → falhas com stacktrace completo.
 - Formato: `log.error("contexto: id={}, erro={}", id, e.getMessage(), e)` — `e` como ÚLTIMO argumento.
+
+---
+
+## Pilar 15: Estratégia de Testes (Obrigatório)
+
+- **Obrigatoriedade**: Toda nova funcionalidade deve vir acompanhada de testes unitários e/ou integração.
+- **Naming**: `should_[resultado]_when_[contexto]`.
+- **Cobertura**: Mínimo de 80% em Services.
+- **Qualidade**: Ausência de testes = Violação MÉDIA.
+
+---
+
+## Padrão Facade (Orquestração)
+
+A `Facade` é o **ponto de entrada obrigatório** entre Controller e Services. Todo módulo CRUD deve ter uma Facade.
+- **Onde vive**: `application/facade/`.
+- **Estrutura**: **Interface + Implementação** obrigatórios.
+  - `ExampleModuleFacade` (interface): define o contrato de operações.
+  - `ExampleModuleFacadeImpl` (`@Component`): implementa, injeta e delega para os Services.
+- **Papel**: Orquestrar o fluxo delegando para Services especializados (Create, Find, Update, Delete, List).
+- O Controller injeta apenas a interface `Facade`, nunca a implementação.
 
 ---
 
@@ -204,7 +264,7 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 | Domain Exception | `domain/exception/*.java` | 1, 3, 13 |
 | Adapter | `infrastructure/adapter/*.java` | 1, 2, 3, 5, 6 (try-catch), 8, 14 |
 | JPA Entity | `infrastructure/repository/entity/` | 1, 2 (Lombok JPA), 10, 12 |
-| Repository | `infrastructure/repository/` | 1, 2, 3, 12, 14 |
+| Repository | `infrastructure/repository/*.java` | **1, 2, 3, 8 (SQL Safety), 12** |
 | SecurityConfig | `shared/config/Security*.java` | CROSS-FILE: rotas vs controllers |
 | ExceptionHandler | `shared/exception/handler/` | CROSS-FILE: exceptions mapping |
 
