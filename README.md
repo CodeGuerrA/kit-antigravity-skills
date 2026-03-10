@@ -13,14 +13,9 @@ antigravity-kit/
 ├── templates/
 │   ├── GEMINI.md               # Constituição (Mestre v2.0)
 │   └── .agent/                 # O Cérebro
-│       ├── agents/             # 7 Especialistas (A-E, X + Auditor)
-│       │   ├── backend-auditor.md              # Orquestrador e Veredito Final
-│       │   ├── reviewer-structure-guardian.md   # (A) Nomenclatura, DI, DTOs, OpenAPI
-│       │   ├── reviewer-hexagonal-architect.md  # (B) Hexagonal, DDD, Entity Separation
-│       │   ├── reviewer-code-quality.md         # (C) SOLID, Clean Code, OOP, Performance
-│       │   ├── reviewer-security-observability.md # (D) Segurança, Exceptions, Logging
-│       │   ├── reviewer-crossfile-validator.md  # (X) Validações Cross-File (V1-V6)
-│       │   └── clean-coder.md                   # (E) Legibilidade Semântica
+│       │   ├── reviewer-bugs.md                # (6) Bug Hunter — Crashes e Nulidade
+│       │   ├── clean-coder.md                   # (E) Arquiteto de Escrita SOLID + Sonar
+│       │   └── sonarqube-fixer.md               # (8) Cirurgião de Dívida Técnica (MCP)
 │       ├── skills/             # Conhecimento Técnico
 │       │   ├── code-standards.md               # Os 14 Pilares de Excelência
 │       │   ├── hexagonal-architecture.md       # Ports & Adapters Completo
@@ -58,20 +53,35 @@ antigravity-kit init --force
 
 ## 🛡️ O QUE O KIT FAZ
 
-### Agentes de Auditoria (Quality Gate Binário)
-| ID | Agente | Responsabilidade |
-|:---|:-------|:-----------------|
-| — | `@backend-auditor` | Orquestra sub-agentes e emite veredito final |
-| A | `@reviewer-structure-guardian` | Nomenclatura, DI/Lombok, DTOs, OpenAPI (Pilares 1,2,4,7) |
-| B | `@reviewer-hexagonal-architect` | Fronteiras Hexagonais, DDD, Entity Separation (Pilares 3,9,10) |
-| C | `@reviewer-code-quality` | SOLID, Clean Code mecânico, OOP, Performance (Pilares 5,6,11,12) |
-| D | `@reviewer-security-observability` | Segurança/PII, Exceptions, Logging (Pilares 8,13,14) |
-| E | `@clean-coder` | Legibilidade semântica, clareza de intenção |
-| X | `@reviewer-crossfile-validator` | 6 validações cross-file (SecurityConfig, Ports, Exceptions, etc.) |
+### 👥 O TIME DE ELITE (The Dream Team)
 
-### Workflows Disponíveis
-- **`/code-review`**: Auditoria multi-agente completa com relatório formatado.
-- **`/implement`**: Implementação guiada por SOLID + Hexagonal com checklist.
+O seu time do **Antigravity Kit** é uma unidade de elite composta por 9 especialistas digitais ultra-sincronizados:
+
+#### 🏛️ Liderança e Execução
+- **`@backend-auditor` (Tech Lead)**: O juiz final. Resolve conflitos entre agentes e garante o veredito (APROVADO/REPROVADO), cruzando dados com o servidor SonarQube real.
+- **`@clean-coder` (O Arquiteto de Escrita)**: O braço direito na criação. Planeja cada passo via `sequential-thinking` e valida o código no Sonar local em tempo real antes da entrega.
+
+#### 🔎 O "Conselho dos Seis" (Os Revisores)
+1.  **`@reviewer-architect`**: Guardião das fronteiras hexagonais e do princípio DRY (zero duplicação sistêmica).
+2.  **`@reviewer-quality`**: O esteta do Clean Code; exige perfeição na legibilidade e manutenibilidade para facilitar o onboarding de novos devs.
+3.  **`@reviewer-security`**: O hacker ético; caça injeções SQL, vulnerabilidades OWASP e vazamentos de PII (dados sensíveis).
+4.  **`@reviewer-performance`**: O caçador de milissegundos; elimina N+1, problemas de cache e complexidade algorítmica desnecessária.
+5.  **`@reviewer-tester`**: O mestre da cobertura; usa o Sonar para identificar lacunas e blindar o código com testes BDD, Fixtures e E2E.
+6.  **`@reviewer-bugs`**: O caçador de nulidades e transações quebradas; prevê falhas de runtime e inconsistências lógicas.
+
+#### 🛠️ Especialistas de Suporte
+- **`@sonarqube-fixer` (O Cirurgião)**: Atua pós-push. Identifica issues abertas no servidor e as corrige cirurgicamente, sincronizando o status no dashboard.
+- **`@reviewer-crossfile-validator`**: O validador de consistência sistêmica entre múltiplos arquivos (SecurityConfig, Ports, Mappers).
+
+### 🔄 CICLO DE VIDA DE DESENVOLVIMENTO (Workflow Order)
+
+Para garantir a perfeição técnica, siga rigorosamente esta ordem de execução:
+
+1.  **`/implement`**: O ponto de partida. O `@clean-coder` planeja via `sequential-thinking` e escreve código blindado com pré-validação Sonar em tempo real.
+2.  **`/test`**: A blindagem. O `@reviewer-tester` identifica lacunas de cobertura através do Sonar e cria a camada de testes (BDD, Fixtures, E2E).
+3.  **`/code-review`**: A barreira final de pré-commit. O `@backend-auditor` orquestra os 6 especialistas para dar o veredito binário antes de você subir o código.
+4.  **`/analista`**: Auditoria sistêmica. Uma visão macro e holística da saúde do projeto, ideal para execuções periódicas ou antes de releases.
+5.  **`/fix-sonar`**: Remediação pós-push. Utilizado apenas caso o servidor central capture falhas após o push ou o Quality Gate do pipeline falhe.
 
 ### Scripts de Verificação Estática
 
@@ -96,12 +106,24 @@ bash .agent/scripts/verify-exceptions.sh [diretório_raiz]
 
 - **Protocolo Socrático**: Validar o escopo antes de codar.
 - **`sequential-thinking`**: Planejamento obrigatório antes de tarefas complexas.
+- **Integração SonarQube (MCP)**: O kit agora conta com as regras de ouro do SonarQube para Java (Bugs, Vulnerabilidades e Performance) integradas nativamente nos checklists dos agentes.
 - **Auditoria Binária**: APROVADO ou REPROVADO. Sem meio-termo.
 - **14 Pilares de Excelência**: SOLID, Clean Code, Hexagonal, DDD, Segurança, Observabilidade.
 
 ---
 
 ## 📋 CHANGELOG
+
+### v2.2.0
+- **Agente @clean-coder (Agente E)**: Especialista em escrita de alta performance com uso mandatório de `analyze_code_snippet` para cada arquivo criado.
+- **Agente @sonarqube-fixer (Agente 8)**: Introdução do "Cirurgião de Qualidade" para remediação ativa de issues do servidor SonarQube.
+- **Workflow `/fix-sonar`**: Novo processo para zerar dívida técnica e status de Quality Gate após commits/pipelines falhos.
+- **Mecanismo de Prova Real (Backtracking)**: Todos os agentes de correção agora utilizam o Sonar para validar o fix; se falhar, o fluxo retrocede automaticamente.
+
+### v2.1.0
+- **Integração Nativa SonarQube**: Todos os agentes reviewers agora seguem as regras de ouro do SonarQube Java (S-codes) para detecção de Bugs, Vulnerabilidades, Hotspots, Code Smells e Performance.
+- **Workflow `/analista` atualizado**: Tabelas de verificação agora incluem identificadores S-code para auditoria determinística.
+- **Skills Consolidadas**: `code-standards.md` expandido com tabelas de referência cruzada SonarQube.
 
 ### v2.0.0
 - Adicionado Agente E (`@clean-coder`) com escopo semântico diferenciado.

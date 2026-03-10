@@ -52,6 +52,15 @@ Consulte a Skill `code-standards.md` para detalhes dos pilares S, O, L, I, D.
 
 ---
 
+### FASE 2 — Mental Double-Check & Fixture Scaffolding (Zero Rework)
+- Antes de redigir o teste com a mão na massa, cheque mentalmente seu plano de cenários felizes e tristes: _"Eu não posso errar meu teste, ele tem que funcionar de primeira. Como forçar essa ramificação falhar no Service via Mock e eu ter controle total?"_
+- Crie ou use a **`Fixture`** para aquele contexto:
+  `src/test/java/.../<modulo>/fixture/<Domain>Fixture.java`.
+- Crie métodos estáticos claros (ex: `validProducer()`, `invalidEmailRequest()`, `inactiveProducerModel()`). Esse dado precisa ser utilizado com flexibilidade.
+- Antes da Asserção final no arquivo, OBRIGATORIAMENTE **adicione um comentário inteligente (Javadoc)** documentando o que esse teste aprova no negócio: "Ex: Simulação de criar e integrar produtor sem falhas de contraint."
+
+---
+
 ### FASE 3 — Estrutura de Pacotes e Scaffolding
 
 Respeite a hierarquia do projeto. Se estiver criando um módulo novo, utilize a Skill `module-template.md` como checklist de arquivos obrigatórios.
@@ -106,17 +115,25 @@ Antes de declarar a implementação concluída, verifique:
 
 ---
 
-### FASE 5 — Testes Obrigatórios
+### FASE 4.5 — Check Twice (ZERO WORKAROUND & ZERO REWORK)
+- Pare e respire. Exija de si mesmo: _"Meu código reflete a perfeição do Clean Code e arquitetura adotada?"_
+- Verifique duas vezes (Double-Check) a estrutura: Há import inútil? Tem Javadoc que traduz as ações do negócio como `A História do Código`? 
+- Se encontrar "TODO", remova ou resolva. Não construa coisas para "arrumar depois". Faça certo na primeira vez.
 
-Antes de submeter ao Quality Gate:
-1. **Rode os testes existentes**: Antes de começar, garanta que o baseline está verde.
-2. **Service Tests**: 100% de cobertura de caminhos.
-3. **Controller Tests**: MockMvc validando status codes e contratos JSON.
-4. **Facade Tests**: Validar delegação para Services.
-5. **Adapter Tests**: @DataJpaTest para persistência.
-6. **Domain Entity Tests**: Validar lógica interna da entidade.
-7. **Mapper Tests**: Validar conversão entre camadas.
-8. **Fixture Factory**: Use o padrão Fixture para dados reutilizáveis.
-9. **Execução**: Rode `./mvnw test` e garanta 100% de sucesso.
+---
 
-Consulte a Skill `testing-patterns.md` para exemplos completos de cada tipo de teste.
+### FASE 5 — Hand-off para Testes
+
+A implementação das funcionalidades de produto/técnica foi finalizada. Agora, deve-se invocar obrigatoriamente o processo de construção e execução de testes automatizados:
+- **Execute o workflow `/test`** para delegar a escrita de testes unitários, integração e repositórios.
+- Nenhum código deve ser considerado entregue (Quality Gate final aprovado) antes do agente `@reviewer-tester` (Agente T) avaliar o resultado da implementação via `/test`.
+
+---
+
+### FASE 6 — O Atualizador do README Dinâmico (MANDATÓRIO)
+Após testar e finalizar a implementação (Fases 1 a 5 validadas):
+- **VOCÊ DEVE ATUALIZAR O `README.md`** do projeto com a recém-criada modelagem/recurso atual. 
+- Essa documentação exige **perfeição profissional**. Uma lista rala e básica não será aprovada.
+- Adicione as descrições de negócio para novos end-points, o que resolve contextualmente e estruturalmente, para que qualquer leigo (ou DevOps novo) olhe e consiga assumir a manutenção do repositório em 1 dia.
+- Explique se existem integrações de banco interligadas e fluxos E2E.
+- Sem isso, a feature de "Implement" NÃO estará `Done`.

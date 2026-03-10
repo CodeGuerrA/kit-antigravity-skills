@@ -5,7 +5,8 @@ description: "Estratégia obrigatória de testes: Unitários, Integração, Pers
 
 # 🧪 SKILL: Estratégia de Testes (Testing Patterns)
 
-**REGRA OURO**: Nenhuma funcionalidade é considerada "pronta" (Done) sem testes correspondentes. A ausência de testes é uma **VIOLAÇÃO MÉDIA** no Quality Gate.
+**REGRA OURO E IMPLACÁVEL**: Nenhuma funcionalidade é considerada "pronta" (Done) sem testes correspondentes cobrindo 100% do seu comportamento, caminhos felizes e infelizes (exceções e falhas de banco de dados). O sistema **NÃO PODE QUEBRAR**. A ausência de testes unitários ou relacionais/integração é uma **VIOLAÇÃO ALTA (Bloqueio Automático)** no Quality Gate. O nível de exigência aqui beira a **perfeição**.
+**CULTURA DE ZERO RETRABALHO**: Testes não existem apenas para passar no Sonar. Eles não podem quebrar e devem ser implementados sem margem de erro na primeira entrega. **Comentários informativos em testes são OBRIGATÓRIOS**: um dev leigo que reprovar seu teste deve entender o que ele prova lendo o Javadoc.
 
 ---
 
@@ -261,13 +262,53 @@ class ProducerPersistenceMapperTest {
 }
 ```
 
+### 7. Testes de Integração e Relacionamentos E2E (Crucial)
+- **Foco**: Fluxos completos envolvendo banco de dados real e múltiplas entidades.
+- **Ferramentas**: `@SpringBootTest` + `Testcontainers` (PostgreSQL/MySQL isolado).
+- **Regra**: Todo relacionamento (ex: `Producer 1:N Farm`) DEVE ter um teste relacional de ponta a ponta que garanta a integridade referencial.
+- **Caso de Uso Obrigatório**: "Eu crio um produtor, e então crio uma fazenda vinculada a esse produtor. Devo testar se ambos existem e estão perfeitamente amarrados sem erro de constraint, e o que ocorre ao tentar atrelar a um produtor inexistente ou ao desativar o pai (cascading)."
+
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+// Configurar Testcontainers aqui
+class ProducerFarmIntegrationTest {
+
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ProducerRepository producerRepo;
+    @Autowired private FarmRepository farmRepo;
+
+    @Test
+    void should_create_farm_linked_to_existing_producer_end_to_end() throws Exception {
+        // 1. Criar e persistir Produtor
+        var producer = producerRepo.save(ProducerFixture.validProducer());
+
+        // 2. Chamar o endpoint da Fazenda vinculada ao ID do produtor
+        var request = FarmFixture.createLinkedRequest(producer.getId());
+        
+        mockMvc.perform(post("/api/v1/farms")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+
+        // 3. Validar consistência de banco no relacionamento (A Prova de Fogo)
+        var farms = farmRepo.findByProducerId(producer.getId());
+        assertFalse(farms.isEmpty());
+        assertEquals(producer.getId(), farms.get(0).getProducer().getId());
+    }
+}
+```
+
 ---
 
-## 📛 NAMING CONVENTION (BDD Style)
+## 📛 NAMING CONVENTION E COMENTÁRIOS DE NEGÓCIO
 
 O nome do método deve descrever o cenário e o resultado esperado em **Inglês**:
 
 `should_[EXPECTED_RESULT]_when_[CONTEXT]`
+
+**Obrigatoriedade de Documentação no Teste**:  
+Acima de qualquer teste complexo de banco de dados ou Service core, **DEVE** haver um comentário ou Javadoc em *Português Brasileiro* detalhando o fluxo exato de negócio:
+- Exemplo: `// Cria o produtor João e vincula a fazenda Alvorada. Garante que se a fazenda não tiver os dados de CAR, retorne Http 400 sem salvar ninguém em banco.`
 
 **Exemplos**:
 - `should_create_producer_when_valid_data()`
@@ -332,14 +373,15 @@ public final class ProducerFixture {
 
 ## 📊 COBERTURA MÍNIMA
 
-| Tipo | Obrigatório |
-|:-----|:------------|
-| Service | 100% dos caminhos (Happy Path + cada Exception Path) |
-| Facade | Delegação correta para cada Service |
-| Controller | Principais status codes (200/201, 400, 404, 500) |
-| Adapter | Save, find, soft delete, paginação |
-| Domain Entity | Todos os métodos de negócio |
-| Mapper | Conversão de campos críticos e enums |
+| Tipo | Obrigatório | Expectativa de Perfeição |
+|:-----|:------------|:-------------------------|
+| Service | **100%** absoluto de linhas e branches | Mock de cada falha lógica e Ports. Se um branch if/else não for coberto, o PR é Rejeitado. |
+| Facade | Delegação 100% correta | Mocks devem verificar as passagens exatas de parâmetros. |
+| Controller | 100% (200, 201, 400, 404, 500) | Validar respostas JSON, constraints nulas e vazias com rigidez. |
+| Adapter DB | Save, find, delete, paginação | `DataJpaTest` validando `@SQLRestriction` em entidades desativadas. |
+| Entidades | 100% Lógica de Negócio Interna | Nenhuma entidade com campo relacional é aprovada sem teste sobre seus métodos intrínsecos. |
+| Integração (E2E) | Fluxos Completos e Relacionais | Sempre testar Pai ↔ Filho acoplados. O sistema deve provar que o DB não quebra. |
+| Mapper | Conversão de todos os campos | Null checks garantidos em Mappers. |
 
 ---
 

@@ -12,7 +12,7 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 ## Pilar 1: Nomenclatura
 
 **PODE:**
-- Código 100% em INGLÊS. Comentários/Javadoc em PT-BR.
+- Código 100% em INGLÊS. Comentários/Javadoc em PT-BR. Todo código/módulo **DEVE** possuir Javadocs detalhados que explicam de forma inteligente e clara as regras de negócio de modo que um leigo ou iniciante possa ler e entender a intenção sistêmica sem precisar ver cada linha. Comentários óbvios como `// Seta o valor X` são PROIBIDOS.
 - DTOs: sufixos `Request` e `Response` ÚNICOS aceitos para transferência de dados.
 - Classes: `PascalCase` / Métodos e variáveis: `camelCase` / Constantes `static final`: `UPPER_SNAKE_CASE`.
 - Pacotes: `lowercase` sem separadores.
@@ -89,7 +89,8 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 | Domain DTOs | `domain/dto/` | `record`, Java puro, zero anotações de framework |
 | Infrastructure DTOs | `infrastructure/.../dto/` | `record`, anotações do sistema externo |
 
-**Fluxo**: Controller recebe API DTO → converte → Domain DTO → Port/Service.
+**Fluxo**: Controller recebe API DTO → converte → Domain DTO → Port/Service. 
+**Conversão DTO ↔ Domain**: Sempre utilize obrigatoriamente **MapStruct** (`@Mapper(componentModel = "spring")`). Mapeadores manuais são PROIBIDOS.
 
 ---
 
@@ -97,6 +98,7 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 
 - **SRP**: **1 Service = 1 operação = 1 método público `execute()`**. Padrão obrigatório: `CreateExampleService`, `FindExampleService`, `UpdateExampleService`, `DeleteExampleService`, `ListExampleService`. Extração obrigatória de validações para `Validator`.
 - **OCP**: Cadeias if/else por tipo extensível → Strategy. Conjunto fixo pequeno → ACEITAR.
+- **Comentários de Negócio:** Tudo que tiver uma regra não-trivial DEVE ser acompanhado de um comentário inteligente que conte "A História e o Motivo" da regra, para conhecimento de domínio.
 - **LSP**: Subclasses não podem restringir contrato do pai nem lançar `UnsupportedOperationException`.
 - **ISP**: Interfaces com métodos não usados por todos implementadores → dividir. **Ports obrigatoriamente separados**: `SavePort`, `FindPort`, `ListPort`, `UpdatePort` — nunca um `RepositoryPort` genérico.
 - **DIP**: Domínio depende apenas de abstrações (Ports). `new` de classes de infra em Services → VIOLAÇÃO Alta.
@@ -108,6 +110,7 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 - Máximo de **20 linhas** por método (exceção: builder chains até 30).
 - Aninhamento máximo: 2 níveis (use early return).
 - **PROIBIDO**: `return null`, `.get()` sem verificação, `.orElse(null)`, código comentado, imports não usados.
+- **Imports**: Sempre prefira imports no topo do arquivo, NUNCA utilize fully qualified names diretamente no código.
 - **DRY**: ≥ 3 linhas duplicadas em 2+ locais → extrair. Cross-file também vale.
 - **KISS**: Se remover uma camada e funciona igual → over-engineering.
 
@@ -158,6 +161,20 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 - Nunca confie em input do usuário — sempre valide via Bean Validation (`@NotBlank`, `@Pattern`, etc.)
   na camada de API antes de chegar ao Domain/Infrastructure.
 
+### 🛡️ Regras SonarQube de Segurança (Vulnerabilidades & Hotspots)
+| Regra | Descrição | Pillar |
+|:------|:----------|:-------|
+| **S2077** | SQL Injection (Concatenação em queries) | Pilar 8.1 |
+| **S6437** | Hardcoded Secrets (Senhas/Tokens no código) | Pilar 8 |
+| **S5131** | XSS (Dados não sanitizados na UI) | Pilar 8 |
+| **S5144** | SSRF (URLs de usuário sem validação) | Pilar 8 |
+| **S2083** | Path Traversal (Acesso a arquivos via input) | Pilar 8 |
+| **S5122** | CORS Misconfiguration (`allowedOrigins("*")`) | Pilar 8 |
+| **S4502** | CSRF Protection (Proteção desabilitada) | Pilar 8 |
+| **S5527** | Certificate Validation (SSL/TLS desabilitado) | Pilar 8 |
+| **S2245** | Weak Randomness (Use `SecureRandom`, não `Random`) | Pilar 8 |
+| **S4423** | Insecure Protocols (Versões obsoletas de TLS) | Pilar 8 |
+
 ---
 
 ## Pilar 9: DDD (Domain-Driven Design)
@@ -173,8 +190,9 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 
 - **Domain Entity** (`domain/entity/`): POJO puro, sem framework.
 - **JPA Entity** (`infrastructure/repository/entity/`): sufixo `*JpaEntity`.
+- **PROIBIDO**: Utilizar cascade (ex: `cascade = CascadeType.ALL`). Sempre utilizar anotações de mapeamento de relacionamento explicitamente.
 - Anotações JPA em `domain/` → **VIOLAÇÃO Alta**.
-- Mapper obrigatório entre Domain Entity ↔ JPA Entity.
+- Mapper obrigatório entre Domain Entity ↔ JPA Entity: Deve-se utilizar **OBRIGATORIAMENTE o MapStruct**.
 
 ---
 
@@ -195,6 +213,24 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 - **PROIBIDO**: Listagem sem paginação.
 - **PROIBIDO**: Concatenação String em loop → `StringBuilder`.
 
+### ⚡ Regras SonarQube de Performance & Bugs Críticos
+| Regra | Tipo | Descrição |
+|:------|:-----|:----------|
+| **S1155** | Perf | Usar `.isEmpty()` em vez de `.size() == 0` |
+| **S3824** | Perf | Usar `Map.computeIfAbsent` (Java 8+) |
+| **S1643** | Perf | Usar `StringBuilder` em loops (não `+`) |
+| **S2119** | Perf | Não instanciar `Random` repetidamente |
+| **S2259** | Bug | NullPointerException (Possível caminho nulo) |
+| **S2095** | Bug | Resource Leak (Falta de try-with-resources) |
+| **S2123** | Bug | Infinity Loops (Erros em loops) |
+| **S1656** | Bug | Self-Assignment (`this.x = x` erro de digitação) |
+| **S2111** | Bug | BigDecimal Double Constructor (Perda de precisão) |
+| **S2250** | Bug | Non-Atomic Check-then-Act (Race conditions) |
+| **S3776** | Smell | Cognitive Complexity (Código espaguete) |
+| **S110** | Smell | Inheritance Depth (> 5 níveis) |
+| **S1192** | Smell | String Literals (Literais repetidos → constantes) |
+| **S1118** | Smell | Utility Classes (Falta construtor privado) |
+
 ---
 
 ## Pilar 13: Exceptions Padronizadas
@@ -204,15 +240,13 @@ Este documento é o **guia supremo de referência técnica** para todo o desenvo
 - ErrorCodes em Enums (`ProducerErrorCode`, `UserErrorCode`), NUNCA hardcoded. Use `.getMessageKey()`.
 - Cada ErrorCode DEVE ter entrada no `messages.properties` com `chave` + `chave.detail`.
 - Metadata contextual via `addMetadata()` no corpo do construtor, NÃO via `Map.of()` no `super()`.
-- **Template de Construtor:**
+- **Template de Construtor (Padrão Obrigatório):**
 ```java
-public ProducerNotFoundException(Long producerId) {
-    super(
-        ProducerErrorCode.PRODUCER_NOT_FOUND.getMessageKey(),
-        "Producer not found",
-        HttpStatus.NOT_FOUND,
-        producerId  // campo contextual do ModuleException
-    );
+public FieldNotFoundException(String message, Long fieldId, Throwable cause) {
+    super(FieldErrorCode.FIELD_NOT_FOUND.getMessageKey(), message, cause, HttpStatus.NOT_FOUND);
+    this.fieldErrorCode = FieldErrorCode.FIELD_NOT_FOUND;
+    this.fieldId = fieldId;
+    addMetadata(METADATA_FIELD_ID, fieldId);
 }
 ```
 - **PersistenceException**: Exceções de infra devem preservar `cause` e usar construtor com `Throwable`.
