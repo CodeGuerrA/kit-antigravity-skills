@@ -22,8 +22,6 @@ Quando você abre o projeto na sua IDE, o agente de IA lê esses arquivos e pass
 - **Node.js** >= 14 (para instalar o CLI)
 - Uma IDE com agente de IA que leia arquivos de contexto do projeto:
   - [Gemini CLI](https://github.com/google-gemini/gemini-cli) — lê `GEMINI.md`
-  - [Cursor](https://cursor.so) — lê `.cursor/rules` ou arquivos `.md` configurados
-  - [Windsurf](https://codeium.com/windsurf) — lê `GEMINI.md` / arquivos de regras
 - **SonarQube** (opcional) — necessário para os workflows `/code-review` e `/fix-sonar` com validação real
 
 ---
